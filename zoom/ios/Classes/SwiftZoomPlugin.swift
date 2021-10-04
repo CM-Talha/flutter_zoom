@@ -107,6 +107,7 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , Mob
             meetingSettings?.setMuteAudioWhenJoinMeeting(parseBoolean(data: arguments["noAudio"]!, defaultValue: false))
             meetingSettings?.meetingShareHidden = parseBoolean(data: arguments["disableShare"]!, defaultValue: false)
             meetingSettings?.meetingInviteHidden = parseBoolean(data: arguments["disableDrive"]!, defaultValue: false)
+            meetingSettings?.meetingPasswordHidden = true;
             let joinMeetingParameters = MobileRTCMeetingJoinParam()
             joinMeetingParameters.userName = arguments["userId"]!!
             joinMeetingParameters.meetingNumber = arguments["meetingId"]!!
