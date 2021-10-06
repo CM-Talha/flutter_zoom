@@ -91,6 +91,10 @@ class ZoomMeetingOptions {
   String noAudio;
   String? jwtAPIKey; //--for web
   String? jwtSignature; //--for web
+  String showMeetingId;//show Meeting ID
+  String showMeetingPass;//show Meeting Password
+  String showButtonParticipants;//for Participants Button
+  String showMoreButton;//For showing More Button
 
   ZoomMeetingOptions({
     required this.userId,
@@ -102,6 +106,10 @@ class ZoomMeetingOptions {
     required this.disableDialIn,
     required this.disableDrive,
     required this.disableInvite,
+    required this.showMeetingId,
+    required this.showButtonParticipants,
+    required this.showMeetingPass,
+    required this.showMoreButton,
     required this.disableShare,
     required this.noDisconnectAudio,
     required this.noAudio,
