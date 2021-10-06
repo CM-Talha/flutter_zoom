@@ -134,7 +134,10 @@ public class ZoomPlugin implements FlutterPlugin, MethodCallHandler,ActivityAwar
             result.success(false);
             return;
         }
-
+        boolean showId=parseBoolean(options,"showMeetingId",false);//for hiding Meeting Id
+         boolean showPass=parseBoolean(options,"showMeetingPass",false);//for Hiding Meeting Pass
+      boolean  showParticipants=parseBoolean(options,"showButtonParticipants",true);// for Showing participants
+      boolean  showMoreButton=parseBoolean(options,"showMoreButton",true);//show More Button
         final MeetingService meetingService = zoomSDK.getMeetingService();
 
         JoinMeetingOptions opts = new JoinMeetingOptions();
@@ -144,7 +147,19 @@ public class ZoomPlugin implements FlutterPlugin, MethodCallHandler,ActivityAwar
         opts.no_dial_in_via_phone = parseBoolean(options, "disableDialIn", false);
         opts.no_disconnect_audio = parseBoolean(options, "noDisconnectAudio", false);
         opts.no_audio = parseBoolean(options, "noAudio", false);
-        opts.meeting_views_options = MeetingViewsOptions.NO_BUTTON_SHARE + MeetingViewsOptions.NO_TEXT_MEETING_ID + MeetingViewsOptions.NO_TEXT_PASSWORD;
+         if(!showId){
+            opts.meeting_views_options = MeetingViewsOptions.NO_TEXT_MEETING_ID;
+        }
+        if(!showPass){
+            opts.meeting_view_options = MeetingViewsOptions.NO_TEXT_PASSWORD;
+        }
+        if(!showParticipants){
+            opts.meeting_view_options = MeetingViewsOptions.NO_BUTTON_PARTICIPANTS;
+        }
+        if(!showMoreButton){
+            opts.meeting_view_options = MeetingViewsOptions.NO_BUTTON_MORE;
+        }
+       // opts.meeting_views_options = MeetingViewsOptions.NO_BUTTON_SHARE + MeetingViewsOptions.NO_TEXT_MEETING_ID + MeetingViewsOptions.NO_TEXT_PASSWORD;
         JoinMeetingParams params = new JoinMeetingParams();
 
         params.displayName = options.get("userId");
