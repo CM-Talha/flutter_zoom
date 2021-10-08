@@ -64,7 +64,7 @@ class MethodChannelZoom extends ZoomPlatform {
     optionMap.putIfAbsent("disableInvite", () => options.disableInvite);
     optionMap.putIfAbsent("disableShare", () => options.disableShare);
     optionMap.putIfAbsent("noDisconnectAudio", () => options.noDisconnectAudio);
-    optionMap.putIfAbsent("showMeetingIdPass",()=>options.showMeetingIdPass);
+    optionMap.putIfAbsent("showMeetingIdPass",()=>options.showMeetingIdPass);//Show meeting id and password
     optionMap.putIfAbsent("noAudio", () => options.noAudio);
 
     return channel

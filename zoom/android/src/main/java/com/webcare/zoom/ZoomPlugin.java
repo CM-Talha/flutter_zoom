@@ -145,7 +145,7 @@ public class ZoomPlugin implements FlutterPlugin, MethodCallHandler,ActivityAwar
         opts.no_disconnect_audio = parseBoolean(options, "noDisconnectAudio", false);
         opts.no_audio = parseBoolean(options, "noAudio", false);
         if(showIdPass==false){
-             opts.meeting_views_options =MeetingViewsOptions.NO_TEXT_MEETING_ID + MeetingViewsOptions.NO_TEXT_PASSWORD;//ShowMeetingIdPass
+             opts.meeting_views_options =MeetingViewsOptions.NO_TEXT_MEETING_ID + MeetingViewsOptions.NO_TEXT_PASSWORD;//Show/HideMeetingIdPass
         }
         JoinMeetingParams params = new JoinMeetingParams();
 

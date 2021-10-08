@@ -91,7 +91,7 @@ class ZoomMeetingOptions {
   String noAudio;
   String? jwtAPIKey; //--for web
   String? jwtSignature; //--for web
-  String showMeetingIdPass;//show Meeting ID/Pass
+  String showMeetingIdPass;//show/Hide Meeting ID/Pass
 
   ZoomMeetingOptions({
     required this.userId,
