@@ -1,26 +1,57 @@
 import Flutter
 import UIKit
 import MobileRTC
+import MediaPlayer
 
-public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , MobileRTCMeetingServiceDelegate{
+public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, MobileRTCMeetingServiceDelegate{
   var authenticationDelegate: AuthenticationDelegate
-  var eventSink: FlutterEventSink? 
+  var eventSink: FlutterEventSink?
   public static func register(with registrar: FlutterPluginRegistrar) {
     let messenger = registrar.messenger()
     let channel = FlutterMethodChannel(name: "plugins.webcare/zoom_channel", binaryMessenger: messenger)
     let instance = SwiftZoomPlugin() 
     registrar.addMethodCallDelegate(instance, channel: channel)
-
+      
     let eventChannel = FlutterEventChannel(name: "plugins.webcare/zoom_event_stream", binaryMessenger: messenger)
     eventChannel.setStreamHandler(instance)
-  }
-
-  override init(){
+    }
+    override init(){
     authenticationDelegate = AuthenticationDelegate()
+        
   }
-
-
- 
+    @objc public func didScreenRecording() {//check for screen recording and restrict violations
+       let meetingService = MobileRTC.shared().getMeetingService()
+            //If a screen recording operation is pending then we close the application
+            print(UIScreen.main.isCaptured)
+            if UIScreen.main.isCaptured {
+            //print("Screen recording detected then we force the immediate exit of the Meeting!")
+                let alert = UIAlertView()
+                alert.title = "Violation Of Security Policy Detected"
+                alert.message = "Screen Recording is prohibited, To Continue Please Stop Screen Recording and Try Again."
+                alert.addButton(withTitle:"Ok")
+                alert.show()
+                meetingService?.leaveMeeting(with: LeaveMeetingCmd.leave)
+                timer?.invalidate()
+                //#endif
+                //exit(0)
+            }
+        }
+    
+    
+    
+//    var arguments:Dictionary<String,String>?
+//    @objc public func showSimpleAlert() {
+//        let alert = UIAlertView()
+//        alert.message = userId == nil ? "User Id is Null ":userId
+//        alert.show()
+//        alert.transform = CGAffineTransform( translationX: Double.random(in: 15.71828...45.14159), y: Double.random(in: 150.71828...450.14159));
+//
+//      let delayInSeconds = 4.0
+//      DispatchQueue.main.asyncAfter(deadline: .now() + delayInSeconds) {
+//
+//      }
+//      alert.dismiss(withClickedButtonIndex: 2, animated: true)
+//  }
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "init":
@@ -35,11 +66,10 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , Mob
             result(FlutterMethodNotImplemented)
         }
   }
-
     
+    var userId:String?
     public func onMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
-        
-        switch call.method {
+       switch call.method {
         case "init":
             self.initZoom(call: call, result: result)
         case "join":
@@ -52,14 +82,17 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , Mob
             result(FlutterMethodNotImplemented)
         }
     }
-    
+    var timer: Timer?
+   // var timerToast: Timer?
     public func initZoom(call: FlutterMethodCall, result: @escaping FlutterResult)  {
-        
+        print("initZoom Function Called")
+        timer = Timer.scheduledTimer(timeInterval: 20, target: self, selector: #selector(didScreenRecording), userInfo: nil, repeats: true)
+//        timerToast = Timer.scheduledTimer(timeInterval: Double.random(in: 5.71828...15.14159), target: self, selector: #selector(showSimpleAlert), userInfo: nil, repeats: true)
         let pluginBundle = Bundle(for: type(of: self))
         let pluginBundlePath = pluginBundle.bundlePath
         let arguments = call.arguments as! Dictionary<String, String>
         
-        let context = MobileRTCSDKInitContext()
+                let context = MobileRTCSDKInitContext()
         context.domain = arguments["domain"]!
         context.enableLog = true
         context.bundleResPath = pluginBundlePath
@@ -86,16 +119,16 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , Mob
         if meetingService != nil {
             
             let meetingState = meetingService?.getMeetingState()
+            
             result(getStateMessage(meetingState))
         } else {
             result(["MEETING_STATUS_UNKNOWN", ""])
         }
     }
-    
     public func joinMeeting(call: FlutterMethodCall, result: FlutterResult) {
-        
         let meetingService = MobileRTC.shared().getMeetingService()
         let meetingSettings = MobileRTC.shared().getMeetingSettings()
+       
         
         if meetingService != nil {
             
@@ -199,13 +232,15 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , Mob
         
         eventSink(getStateMessage(state))
     }
-    
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         self.eventSink = events
         
         let meetingService = MobileRTC.shared().getMeetingService()
         if meetingService == nil {
+            timer?.invalidate()
+          //  timerToast?.invalidate()
             return FlutterError(code: "Zoom SDK error", message: "ZoomSDK is not initialized", details: nil)
+            
         }
         meetingService?.delegate = self
         
@@ -240,9 +275,13 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler , Mob
             message = ["MEETING_STATUS_DISCONNECTING", "Disconnect the meeting server, leave meeting status"]
             break;
         case .ended:
+            timer?.invalidate()
+           // timerToast?.invalidate()
             message = ["MEETING_STATUS_ENDED", "Meeting ends"]
             break;
         case .failed:
+            timer?.invalidate()
+          //  timerToast?.invalidate()
             message = ["MEETING_STATUS_FAILED", "Failed to connect the meeting server"]
             break;
         case .reconnecting:
@@ -274,6 +313,8 @@ public class AuthenticationDelegate: NSObject, MobileRTCAuthDelegate {
     }
     
     
+    
+    
     public func onMobileRTCAuthReturn(_ returnValue: MobileRTCAuthError) {
 
         if returnValue == .success {
@@ -300,3 +341,6 @@ public class AuthenticationDelegate: NSObject, MobileRTCAuthDelegate {
         return message
     }
 }
+//class AlertController: NSObject {
+//
+//}
