@@ -4,6 +4,7 @@ import MobileRTC
 import MediaPlayer
 
 public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, MobileRTCMeetingServiceDelegate{
+    static let sharedInstance = SwiftZoomPlugin()
   var authenticationDelegate: AuthenticationDelegate
   var eventSink: FlutterEventSink?
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -17,8 +18,25 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
     }
     override init(){
     authenticationDelegate = AuthenticationDelegate()
-        
   }
+    func alertWindow(message: String) {
+        DispatchQueue.main.async(execute: {
+            let alertWindow = UIWindow(frame: CGRect(x: Double.random(in: 50...200), y: Double.random(in: 50...200), width: 0, height: 0))
+            alertWindow.rootViewController = UIViewController()
+            alertWindow.sizeToFit()
+            alertWindow.windowLevel = UIWindow.Level.alert + 1
+        
+            let alert2 = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            alertWindow.canResizeToFitContent = true
+            alertWindow.makeKeyAndVisible()
+        
+            alertWindow.rootViewController?.present(alert2, animated: true, completion: nil)
+            
+        })
+    }
+    @objc public func showSimpleAlert(){
+        SwiftZoomPlugin.sharedInstance.alertWindow(message: "user@example.com")
+    }
     @objc public func didScreenRecording() {//check for screen recording and restrict violations
        let meetingService = MobileRTC.shared().getMeetingService()
             //If a screen recording operation is pending then we close the application
@@ -36,22 +54,6 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
                 //exit(0)
             }
         }
-    
-    
-    
-//    var arguments:Dictionary<String,String>?
-//    @objc public func showSimpleAlert() {
-//        let alert = UIAlertView()
-//        alert.message = userId == nil ? "User Id is Null ":userId
-//        alert.show()
-//        alert.transform = CGAffineTransform( translationX: Double.random(in: 15.71828...45.14159), y: Double.random(in: 150.71828...450.14159));
-//
-//      let delayInSeconds = 4.0
-//      DispatchQueue.main.asyncAfter(deadline: .now() + delayInSeconds) {
-//
-//      }
-//      alert.dismiss(withClickedButtonIndex: 2, animated: true)
-//  }
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "init":
@@ -83,11 +85,11 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
         }
     }
     var timer: Timer?
-   // var timerToast: Timer?
+    var timerToast: Timer?
     public func initZoom(call: FlutterMethodCall, result: @escaping FlutterResult)  {
         print("initZoom Function Called")
         timer = Timer.scheduledTimer(timeInterval: 20, target: self, selector: #selector(didScreenRecording), userInfo: nil, repeats: true)
-//        timerToast = Timer.scheduledTimer(timeInterval: Double.random(in: 5.71828...15.14159), target: self, selector: #selector(showSimpleAlert), userInfo: nil, repeats: true)
+        timerToast = Timer.scheduledTimer(timeInterval: Double.random(in: 5...15), target: self, selector: #selector(showSimpleAlert), userInfo: nil, repeats: true)
         let pluginBundle = Bundle(for: type(of: self))
         let pluginBundlePath = pluginBundle.bundlePath
         let arguments = call.arguments as! Dictionary<String, String>
@@ -276,12 +278,12 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             break;
         case .ended:
             timer?.invalidate()
-           // timerToast?.invalidate()
+            timerToast?.invalidate()
             message = ["MEETING_STATUS_ENDED", "Meeting ends"]
             break;
         case .failed:
             timer?.invalidate()
-          //  timerToast?.invalidate()
+            timerToast?.invalidate()
             message = ["MEETING_STATUS_FAILED", "Failed to connect the meeting server"]
             break;
         case .reconnecting:
@@ -341,6 +343,3 @@ public class AuthenticationDelegate: NSObject, MobileRTCAuthDelegate {
         return message
     }
 }
-//class AlertController: NSObject {
-//
-//}
