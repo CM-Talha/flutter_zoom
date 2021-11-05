@@ -4,6 +4,7 @@ import MobileRTC
 import MediaPlayer
 
 public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, MobileRTCMeetingServiceDelegate{
+    static var userId:String? // for user ID as WaterMark
     static let sharedInstance = SwiftZoomPlugin()
   var authenticationDelegate: AuthenticationDelegate
   var eventSink: FlutterEventSink?
@@ -21,26 +22,45 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
   }
     func alertWindow(message: String) {
         DispatchQueue.main.async(execute: {
-            let alertWindow = UIWindow(frame: CGRect(x: Double.random(in: 50...200), y: Double.random(in: 50...200), width: 0, height: 0))
-            alertWindow.rootViewController = UIViewController()
-            alertWindow.sizeToFit()
-            alertWindow.windowLevel = UIWindow.Level.alert + 1
-        
-            let alert2 = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-            alertWindow.canResizeToFitContent = true
-            alertWindow.makeKeyAndVisible()
-        
-            alertWindow.rootViewController?.present(alert2, animated: true, completion: nil)
             
+            let uiWindow = UIWindow(frame: CGRect(x: Double.random(in: 50...100), y: Double.random(in: 50...300), width: 0, height: 0))
+            
+            uiWindow.rootViewController = UIViewController()
+            uiWindow.sizeToFit()
+            uiWindow.windowLevel = UIWindow.Level.alert + 1
+            
+            let alert2 = UIAlertController(title: nil, message: "", preferredStyle: .alert)
+            alert2.view.backgroundColor=UIColor.clear
+            alert2.view.alpha=0.0
+            alert2.view.layer.cornerRadius = 0
+            alert2.view.sizeToFit()
+            alert2.view.isHidden = true
+            
+            
+            let uiView=UIView(frame:CGRect(x: 50, y: 50, width: 180, height: 100))
+            uiView.backgroundColor=UIColor.clear
+            
+            let label=UILabel(frame: CGRect(x:0,y:0,width:180,height:20))
+            label.text=message
+            label.textColor=UIColor.red.withAlphaComponent(0.8)
+            label.alpha=0.8
+            label.font = UIFont.systemFont(ofSize: 14)
+            label.backgroundColor=UIColor.clear
+            uiView.addSubview(label)
+            
+            uiWindow.canResizeToFitContent = true
+            uiWindow.makeKeyAndVisible()
+            uiWindow.backgroundColor=UIColor.clear
+            
+            uiWindow.rootViewController?.view.addSubview(uiView)
+            uiWindow.rootViewController?.present(alert2, animated: true,completion: nil)
         })
     }
-    @objc public func showSimpleAlert(){
-        SwiftZoomPlugin.sharedInstance.alertWindow(message: "user@example.com")
-    }
+    
     @objc public func didScreenRecording() {//check for screen recording and restrict violations
        let meetingService = MobileRTC.shared().getMeetingService()
             //If a screen recording operation is pending then we close the application
-            print(UIScreen.main.isCaptured)
+          //  print(UIScreen.main.isCaptured)
             if UIScreen.main.isCaptured {
             //print("Screen recording detected then we force the immediate exit of the Meeting!")
                 let alert = UIAlertView()
@@ -54,11 +74,24 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
                 //exit(0)
             }
         }
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+  
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        
+        
+        
+        
         switch call.method {
         case "init":
             self.initZoom(call: call, result: result)
         case "join":
+            let arguments = call.arguments as! Dictionary<String, String?>
+            
+//            arguments.forEach { (key: String, value: String?) in
+//                print("\(key) => \(value)")
+//            }
+            
+            SwiftZoomPlugin.userId = arguments["userId"]! ?? "User Id not found"
+            //print("SwiftZoomPlugin.userId:" + SwiftZoomPlugin.userId!)
             self.joinMeeting(call: call, result: result)
         case "start":
             self.startMeeting(call: call, result: result)
@@ -69,8 +102,9 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
         }
   }
     
-    var userId:String?
     public func onMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        
+        
        switch call.method {
         case "init":
             self.initZoom(call: call, result: result)
@@ -84,12 +118,14 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             result(FlutterMethodNotImplemented)
         }
     }
+    
     var timer: Timer?
     var timerToast: Timer?
     public func initZoom(call: FlutterMethodCall, result: @escaping FlutterResult)  {
-        print("initZoom Function Called")
         timer = Timer.scheduledTimer(timeInterval: 20, target: self, selector: #selector(didScreenRecording), userInfo: nil, repeats: true)
+        
         timerToast = Timer.scheduledTimer(timeInterval: Double.random(in: 5...15), target: self, selector: #selector(showSimpleAlert), userInfo: nil, repeats: true)
+        
         let pluginBundle = Bundle(for: type(of: self))
         let pluginBundlePath = pluginBundle.bundlePath
         let arguments = call.arguments as! Dictionary<String, String>
@@ -111,7 +147,6 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
         if let appSecret = arguments["appSecret"] {
             auth?.clientSecret = appSecret
         }
-        
         auth?.sdkAuth()
     }
     
@@ -127,16 +162,17 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             result(["MEETING_STATUS_UNKNOWN", ""])
         }
     }
+    
     public func joinMeeting(call: FlutterMethodCall, result: FlutterResult) {
         let meetingService = MobileRTC.shared().getMeetingService()
         let meetingSettings = MobileRTC.shared().getMeetingSettings()
-       
         
         if meetingService != nil {
             
             let arguments = call.arguments as! Dictionary<String, String?>
             
-            meetingSettings?.disableDriveMode(parseBoolean(data: arguments["disableDrive"]!, defaultValue: false))
+            meetingSettings?.disableDriveMode(true)
+            //(parseBoolean(data: arguments["disableDrive"]!, defaultValue: false))
             meetingSettings?.disableCall(in: parseBoolean(data: arguments["disableDialIn"]!, defaultValue: false))
             meetingSettings?.setAutoConnectInternetAudio(parseBoolean(data: arguments["noDisconnectAudio"]!, defaultValue: false))
             meetingSettings?.setMuteAudioWhenJoinMeeting(parseBoolean(data: arguments["noAudio"]!, defaultValue: false))
@@ -144,10 +180,15 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             meetingSettings?.meetingInviteHidden = parseBoolean(data: arguments["disableDrive"]!, defaultValue: false)
             meetingSettings?.meetingPasswordHidden = true;
             let joinMeetingParameters = MobileRTCMeetingJoinParam()
+            let dataString:String = arguments["disableDrive"]!!
+            let name = dataString.components(separatedBy: ",")
             joinMeetingParameters.userName = arguments["userId"]!!
+            //name[1]
             joinMeetingParameters.meetingNumber = arguments["meetingId"]!!
-           
-            
+//            arguments.forEach { (key: String, value: String?) in
+//                print("\(key) => \(value)")
+//            }
+            SwiftZoomPlugin.userId=arguments["userId"]!!
             let hasPassword = arguments["meetingPassword"]! != nil
             if hasPassword {
                 joinMeetingParameters.password = arguments["meetingPassword"]!!
@@ -188,7 +229,6 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
            // user.userToken = arguments["zoomToken"]!!
             user.userID = arguments["userId"]!!
             user.zak = arguments["zoomAccessToken"]!!
-
             let param: MobileRTCMeetingStartParam = user
             
             let response = meetingService?.startMeeting(with: param)
@@ -212,7 +252,9 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
         }
         return result
     }
-    
+    @objc public func showSimpleAlert(){
+        SwiftZoomPlugin.sharedInstance.alertWindow(message: SwiftZoomPlugin.userId ?? "userID not Found")
+    }
     
     
     
@@ -240,7 +282,7 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
         let meetingService = MobileRTC.shared().getMeetingService()
         if meetingService == nil {
             timer?.invalidate()
-          //  timerToast?.invalidate()
+            timerToast?.invalidate()
             return FlutterError(code: "Zoom SDK error", message: "ZoomSDK is not initialized", details: nil)
             
         }
