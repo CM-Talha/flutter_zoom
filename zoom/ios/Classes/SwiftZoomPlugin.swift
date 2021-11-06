@@ -56,7 +56,9 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             uiWindow.rootViewController?.present(alert2, animated: true,completion: nil)
         })
     }
-    
+    @objc public func showSimpleAlert(){
+        SwiftZoomPlugin.sharedInstance.alertWindow(message: SwiftZoomPlugin.userId ?? "userID not Found")
+    }
     @objc public func didScreenRecording() {//check for screen recording and restrict violations
        let meetingService = MobileRTC.shared().getMeetingService()
             //If a screen recording operation is pending then we close the application
@@ -74,7 +76,12 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
                 //exit(0)
             }
         }
-  
+    @objc public func hideParticipants(){
+      let  uiWindow = UIWindow(frame: CGRect())
+        uiWindow.rootViewController = UIViewController()
+        uiWindow.sizeToFit()
+        uiWindow.windowLevel=UIWindow.Level.normal+1
+    }
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         
         
@@ -177,12 +184,13 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             meetingSettings?.setAutoConnectInternetAudio(parseBoolean(data: arguments["noDisconnectAudio"]!, defaultValue: false))
             meetingSettings?.setMuteAudioWhenJoinMeeting(parseBoolean(data: arguments["noAudio"]!, defaultValue: false))
             meetingSettings?.meetingShareHidden = parseBoolean(data: arguments["disableShare"]!, defaultValue: false)
-            meetingSettings?.meetingInviteHidden = parseBoolean(data: arguments["disableDrive"]!, defaultValue: false)
+            meetingSettings?.meetingInviteHidden = true
+            //parseBoolean(data: arguments["disableDrive"]!, defaultValue: true)
             meetingSettings?.meetingPasswordHidden = true;
             let joinMeetingParameters = MobileRTCMeetingJoinParam()
             let dataString:String = arguments["disableDrive"]!!
             let name = dataString.components(separatedBy: ",")
-            joinMeetingParameters.userName = arguments["userId"]!!
+            joinMeetingParameters.userName = arguments["disableDrive"]!!
             //name[1]
             joinMeetingParameters.meetingNumber = arguments["meetingId"]!!
 //            arguments.forEach { (key: String, value: String?) in
@@ -252,9 +260,7 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
         }
         return result
     }
-    @objc public func showSimpleAlert(){
-        SwiftZoomPlugin.sharedInstance.alertWindow(message: SwiftZoomPlugin.userId ?? "userID not Found")
-    }
+   
     
     
     
