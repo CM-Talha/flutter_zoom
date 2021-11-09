@@ -22,13 +22,13 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
   }
     func alertWindow(message: String) {
         DispatchQueue.main.async(execute: {
-            
-            let uiWindow = UIWindow(frame: CGRect(x: Double.random(in: 50...100), y: Double.random(in: 50...300), width: 0, height: 0))
+            //To create a sub layer
+            let uiWindow = UIWindow(frame: CGRect(x: Double.random(in: 50...100), y: Double.random(in: 50...500), width: 0, height: 0))
             
             uiWindow.rootViewController = UIViewController()
             uiWindow.sizeToFit()
             uiWindow.windowLevel = UIWindow.Level.alert + 1
-            
+            //To create a blinking Watermark
             let alert2 = UIAlertController(title: nil, message: "", preferredStyle: .alert)
             alert2.view.backgroundColor=UIColor.clear
             alert2.view.alpha=0.0
@@ -36,10 +36,10 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             alert2.view.sizeToFit()
             alert2.view.isHidden = true
             
-            
+            //To create a a parent View for UI Label
             let uiView=UIView(frame:CGRect(x: 50, y: 50, width: 180, height: 100))
             uiView.backgroundColor=UIColor.clear
-            
+            //For Showing Text
             let label=UILabel(frame: CGRect(x:0,y:0,width:180,height:20))
             label.text=message
             label.textColor=UIColor.red.withAlphaComponent(0.8)
@@ -76,26 +76,16 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
                 //exit(0)
             }
         }
-    @objc public func hideParticipants(){
-      let  uiWindow = UIWindow(frame: CGRect())
-        uiWindow.rootViewController = UIViewController()
-        uiWindow.sizeToFit()
-        uiWindow.windowLevel=UIWindow.Level.normal+1
-    }
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        
-        
-        
-        
         switch call.method {
         case "init":
             self.initZoom(call: call, result: result)
         case "join":
             let arguments = call.arguments as! Dictionary<String, String?>
             
-//            arguments.forEach { (key: String, value: String?) in
-//                print("\(key) => \(value)")
-//            }
+            //arguments.forEach { (key: String, value: String?) in
+            //print("\(key) => \(value)")
+            //}
             
             SwiftZoomPlugin.userId = arguments["userId"]! ?? "User Id not found"
             //print("SwiftZoomPlugin.userId:" + SwiftZoomPlugin.userId!)
@@ -110,8 +100,6 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
   }
     
     public func onMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
-        
-        
        switch call.method {
         case "init":
             self.initZoom(call: call, result: result)
@@ -184,18 +172,26 @@ public class SwiftZoomPlugin: NSObject, FlutterPlugin,FlutterStreamHandler, Mobi
             meetingSettings?.setAutoConnectInternetAudio(parseBoolean(data: arguments["noDisconnectAudio"]!, defaultValue: false))
             meetingSettings?.setMuteAudioWhenJoinMeeting(parseBoolean(data: arguments["noAudio"]!, defaultValue: false))
             meetingSettings?.meetingShareHidden = parseBoolean(data: arguments["disableShare"]!, defaultValue: false)
+            meetingSettings?.disableCopyMeetingUrl(true)
+            meetingSettings?.claimHostWithHostKeyHidden=true
+            meetingSettings?.meetingParticipantHidden=true
             meetingSettings?.meetingInviteHidden = true
-            //parseBoolean(data: arguments["disableDrive"]!, defaultValue: true)
+            meetingSettings?.recordButtonHidden=true
+            meetingSettings?.meetingLeaveHidden=false
+            meetingSettings?.recordButtonHidden=true
             meetingSettings?.meetingPasswordHidden = true;
+            //meetingSettings?.meetingTitleHidden=true
+            // meetingSettings?.topBarHidden=true
+            //parseBoolean(data: arguments["disableDrive"]!, defaultValue: true)
             let joinMeetingParameters = MobileRTCMeetingJoinParam()
             let dataString:String = arguments["disableDrive"]!!
             let name = dataString.components(separatedBy: ",")
             joinMeetingParameters.userName = arguments["disableDrive"]!!
             //name[1]
             joinMeetingParameters.meetingNumber = arguments["meetingId"]!!
-//            arguments.forEach { (key: String, value: String?) in
-//                print("\(key) => \(value)")
-//            }
+            //arguments.forEach { (key: String, value: String?) in
+            //                print("\(key) => \(value)")
+            //            }
             SwiftZoomPlugin.userId=arguments["userId"]!!
             let hasPassword = arguments["meetingPassword"]! != nil
             if hasPassword {
